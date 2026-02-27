@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "notes": "Edit these to match your contract timelines. Calendar-day logic for now.",
+  "rules": [
+    { "name": "Step 1 filing deadline (example)", "days": 10 },
+    { "name": "Appeal deadline (example)", "days": 10 }
+  ]
+}

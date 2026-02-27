@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "items": [
+    {
+      "id": "late_call_in",
+      "title": "Late Call-In / Attendance Discipline (intake prompts)",
+      "intent": "attendance",
+      "tags": ["late", "call-in", "attendance", "tardy", "overslept"],
+      "keywords": ["late call", "called in", "overslept", "tardy", "attendance"],
+      "answer": "Collect: scheduled start time, actual call time, who was called, whether sick code used, prior occurrences, written discipline, and what standard management claims."
+    },
+    {
+      "id": "discipline_meeting",
+      "title": "Investigation / disciplinary meeting (representation + deadlines intake)",
+      "intent": "discipline",
+      "tags": ["investigation", "meeting", "discipline", "hearing"],
+      "keywords": ["notice of investigation", "hearing", "meeting with", "superintendent"],
+      "answer": "Collect: date/time of meeting notice, exact allegations, whether rep requested/denied, any written notice, and who attended."
+    },
+    {
+      "id": "safety_event",
+      "title": "Safety / Incident / ARC (intake prompts)",
+      "intent": "safety",
+      "tags": ["accident", "incident", "arc", "preventable", "safety"],
+      "keywords": ["accident", "rear-end", "ARC", "preventable", "collision"],
+      "answer": "Collect: route, bus number, speed, conditions, video existence, what mitigation was taken, ARC process steps, and what documents were shown."
+    }
+  ]
+}
