@@ -1,29 +1,93 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "items": [
     {
       "id": "late_call_in",
-      "title": "Late Call-In / Attendance Discipline (intake prompts)",
+      "title": "Late Call-In / Attendance Discipline",
       "intent": "attendance",
-      "tags": ["late", "call-in", "attendance", "tardy", "overslept"],
-      "keywords": ["late call", "called in", "overslept", "tardy", "attendance"],
+      "tags": ["late", "call-in", "attendance", "tardy", "overslept", "no call", "no show", "absent"],
+      "keywords": ["late call", "called in", "overslept", "tardy", "attendance", "no call no show", "absence", "called off sick"],
       "answer": "Collect: scheduled start time, actual call time, who was called, whether sick code used, prior occurrences, written discipline, and what standard management claims."
     },
     {
       "id": "discipline_meeting",
-      "title": "Investigation / disciplinary meeting (representation + deadlines intake)",
+      "title": "Investigation / Disciplinary Meeting (representation + deadlines)",
       "intent": "discipline",
-      "tags": ["investigation", "meeting", "discipline", "hearing"],
-      "keywords": ["notice of investigation", "hearing", "meeting with", "superintendent"],
+      "tags": ["investigation", "meeting", "discipline", "hearing", "write-up", "written warning", "counseling"],
+      "keywords": ["notice of investigation", "hearing", "meeting with", "superintendent", "write up", "written warning", "counseling session", "called to the office"],
       "answer": "Collect: date/time of meeting notice, exact allegations, whether rep requested/denied, any written notice, and who attended."
     },
     {
+      "id": "suspension",
+      "title": "Suspension / Termination / Discharge",
+      "intent": "suspension",
+      "tags": ["suspended", "suspension", "terminated", "termination", "fired", "discharged", "discharge", "days off"],
+      "keywords": ["day suspension", "suspended without pay", "terminated", "fired", "discharge letter", "last chance", "termination letter", "let go"],
+      "answer": "Collect: date of suspension/termination, exact reason given, any written notice, length of suspension, prior discipline in same series, whether Weingarten rights were offered, and whether progressive discipline was followed."
+    },
+    {
       "id": "safety_event",
-      "title": "Safety / Incident / ARC (intake prompts)",
+      "title": "Safety / Incident / ARC Review",
       "intent": "safety",
-      "tags": ["accident", "incident", "arc", "preventable", "safety"],
-      "keywords": ["accident", "rear-end", "ARC", "preventable", "collision"],
+      "tags": ["accident", "incident", "arc", "preventable", "safety", "collision", "crash", "rear-end"],
+      "keywords": ["accident", "rear-end", "ARC", "preventable", "collision", "incident report", "safety committee", "bus accident"],
       "answer": "Collect: route, bus number, speed, conditions, video existence, what mitigation was taken, ARC process steps, and what documents were shown."
+    },
+    {
+      "id": "overtime_scheduling",
+      "title": "Overtime / Extra Board / Forced Run",
+      "intent": "overtime",
+      "tags": ["overtime", "ot", "forced", "extra board", "mandatory", "10-hour", "hours", "scheduling", "forced overtime"],
+      "keywords": ["forced to work", "mandatory overtime", "extra board", "OT list", "overtime list", "skipped on list", "called for overtime", "10 hour rule", "hours of service", "forced in"],
+      "answer": "Collect: date/shift, who was forced, position on OT list, who was above/below on list, whether any exceptions apply, any written OT policy, and supervisor name."
+    },
+    {
+      "id": "seniority",
+      "title": "Seniority Violation / Bid / Run Assignment",
+      "intent": "seniority",
+      "tags": ["seniority", "bid", "shift bid", "assignment", "bumped", "junior", "senior", "run", "route bid", "pick"],
+      "keywords": ["seniority violation", "bid sheet", "shift bid", "junior operator", "passed over", "bumped", "run assignment", "picked around", "pick list", "sign up"],
+      "answer": "Collect: member's seniority date, name/seniority of junior employee given preference, what run/shift was involved, bid process details, and any written policy or past practice cited."
+    },
+    {
+      "id": "harassment",
+      "title": "Harassment / Hostile Work Environment / Intimidation",
+      "intent": "harassment",
+      "tags": ["harassment", "hostile", "intimidation", "bullying", "hostile work", "retaliation", "threatened", "targeted"],
+      "keywords": ["hostile work environment", "being harassed", "supervisor harassment", "union retaliation", "intimidated", "threatened", "targeted by management", "toxic environment"],
+      "answer": "Collect: specific incidents with dates/times, exact words used, witnesses present, whether reported to HR/management, any pattern of behavior, and any connection to union activity or protected class."
+    },
+    {
+      "id": "fmla_leave",
+      "title": "FMLA / Medical Leave / Leave of Absence",
+      "intent": "fmla",
+      "tags": ["fmla", "medical leave", "leave", "loa", "doctor", "health", "intermittent", "ama"],
+      "keywords": ["FMLA", "leave of absence", "medical leave", "doctor's note", "intermittent leave", "approved leave", "denied leave", "LOA", "AMA", "serious health condition"],
+      "answer": "Collect: whether FMLA was applied for/approved, denial reason, dates of leave requested vs denied, any discipline issued for approved leave absences, and any medical documentation provided."
+    },
+    {
+      "id": "pay_dispute",
+      "title": "Pay Dispute / Wage Error / Missing Pay",
+      "intent": "pay",
+      "tags": ["pay", "paycheck", "wage", "underpaid", "missing pay", "short", "back pay", "rate", "step"],
+      "keywords": ["short on my check", "missing pay", "underpaid", "wrong pay rate", "step increase", "back pay", "wage error", "paycheck error", "didn't get paid"],
+      "answer": "Collect: pay period affected, expected vs actual amount, correct pay rate per contract, whether error reported to payroll, and any prior communication with management about the error."
+    },
+    {
+      "id": "drug_testing",
+      "title": "Drug / Alcohol Testing",
+      "intent": "drug_test",
+      "tags": ["drug test", "alcohol test", "random", "dot", "reasonable suspicion", "post-accident test"],
+      "keywords": ["drug test", "alcohol test", "random test", "DOT test", "reasonable suspicion", "post-accident test", "failed test", "refused test", "testing policy"],
+      "answer": "Collect: type of test (random, post-accident, reasonable suspicion), date, whether proper protocol was followed, chain of custody documentation, MRO involvement, and any observed behavior cited."
+    },
+    {
+      "id": "route_run_dispute",
+      "title": "Run / Route Dispute (not seniority)",
+      "intent": "run_dispute",
+      "tags": ["run", "route", "reassigned", "pulled off run", "operator complaint", "transfer"],
+      "keywords": ["pulled off my run", "reassigned route", "route complaint", "operator filed complaint", "transferred off", "run change", "route change"],
+      "answer": "Collect: which run/route, reason given by management, any written notice, whether other operators were available, contract article cited, and whether this is a pattern."
     }
   ]
 }
