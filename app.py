@@ -1,22 +1,21 @@
-import os
 import json
 import time
 import uuid
 import datetime as dt
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional
 
 import streamlit as st
 
 from intake.auth import require_access
 from intake.kb import load_kb, route_intent, KBResult
-from intake.deadlines import load_deadline_rules, compute_deadlines
-from intake.llm import LLMClient, LLMConfig
-from intake.packet import build_packet_text, build_packet_filename, as_download_bytes
+from intake.deadlines import load_deadline_rules
+from intake.llm import LLMClient, LLMConfig, AUTO_FILE_THRESHOLD
+from intake.packet import build_packet_text, build_packet_filename, as_download_bytes, URGENT_INTENTS
 from intake.emailer import send_packet_email, EmailConfig
 
 
 APP_TITLE = "AI Intake Steward — Teamsters Local 795"
-APP_SUBTITLE = "Fact-gathering only (no determinations). Steward review required."
+APP_SUBTITLE = "Report an issue 24/7. Your steward will be notified automatically."
 
 
 def init_state():
@@ -25,22 +24,25 @@ def init_state():
     if "started_at" not in st.session_state:
         st.session_state.started_at = time.time()
     if "messages" not in st.session_state:
-        st.session_state.messages = []  # list of {role, content, ts}
+        st.session_state.messages = []
     if "intake" not in st.session_state:
+        session_ref = str(uuid.uuid4())[:8].upper()
         st.session_state.intake = {
             "member_email": "",
             "case_title": "",
             "facts": [],
-            "timeline": [],
-            "people": [],
-            "documents": [],
             "questions_asked": 0,
+            "session_ref": session_ref,
             "routing": {"intent": "", "kb_hits": []},
         }
     if "packet_ready" not in st.session_state:
         st.session_state.packet_ready = False
     if "packet_text" not in st.session_state:
         st.session_state.packet_text = ""
+    if "report_filed" not in st.session_state:
+        st.session_state.report_filed = False
+    if "llm_config" not in st.session_state:
+        st.session_state.llm_config = {}
 
 
 def ui_header():
@@ -51,38 +53,55 @@ def ui_header():
 
 def ui_sidebar(config: Dict[str, Any]):
     with st.sidebar:
-        st.header("Controls")
+        st.header("Your Report")
 
         st.session_state.intake["member_email"] = st.text_input(
-            "Member email (required)",
+            "Your email (required)",
             value=st.session_state.intake.get("member_email", ""),
             placeholder="name@example.com",
         ).strip()
 
         st.session_state.intake["case_title"] = st.text_input(
-            "Case title (optional)",
+            "Brief title (optional)",
             value=st.session_state.intake.get("case_title", ""),
-            placeholder="Short label (ex: 'Late Call-In Reprimand')",
+            placeholder="e.g. 'Late call-in warning'",
         ).strip()
 
-        st.subheader("Model + Cost Controls")
+        # File Now button — available after the member has confirmed the issue type (turn 1+)
+        questions = st.session_state.intake.get("questions_asked", 0)
+        if questions >= 1 and not st.session_state.report_filed:
+            st.divider()
+            st.caption("Ready to submit? Your steward will be notified immediately.")
+            if st.button("File Report Now", type="primary", use_container_width=True):
+                st.session_state["file_now_requested"] = True
 
-        allowed_models = config["llm"]["allowed_models"]
-        default_model = config["llm"]["default_model"]
-        model = st.selectbox("Model", options=allowed_models, index=allowed_models.index(default_model))
-        temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=float(config["llm"]["temperature"]), step=0.05)
+        # Confirmation display
+        if st.session_state.report_filed:
+            ref = st.session_state.intake.get("session_ref", "")
+            st.divider()
+            st.success(f"Report filed.\nReference: **{ref}**")
 
-        st.session_state["llm_config"] = {
-            "model": model,
-            "temperature": temperature,
-        }
+        with st.expander("Advanced"):
+            allowed_models = config["llm"]["allowed_models"]
+            default_model = config["llm"]["default_model"]
+            model = st.selectbox(
+                "Model",
+                options=allowed_models,
+                index=allowed_models.index(default_model),
+            )
+            temperature = st.slider(
+                "Temperature",
+                min_value=0.0, max_value=1.0,
+                value=float(config["llm"]["temperature"]),
+                step=0.05,
+            )
+            st.session_state["llm_config"] = {"model": model, "temperature": temperature}
 
-        st.subheader("Packet")
-        st.write("Build a steward-review packet at any time.")
-        if st.button("Build Packet Now", type="primary"):
-            st.session_state.packet_ready = True
+        with st.expander("Packet"):
+            if st.button("Build Packet (manual)"):
+                st.session_state.packet_ready = True
 
-        st.subheader("Reset")
+        st.divider()
         if st.button("Reset Session"):
             for k in list(st.session_state.keys()):
                 del st.session_state[k]
@@ -93,7 +112,7 @@ def add_message(role: str, content: str):
     st.session_state.messages.append({
         "role": role,
         "content": content,
-        "ts": dt.datetime.now().isoformat(timespec="seconds")
+        "ts": dt.datetime.now().isoformat(timespec="seconds"),
     })
 
 
@@ -105,24 +124,55 @@ def render_chat():
 
 def system_banner():
     st.info(
-        "Rules: facts only • no determinations • steward review required • "
-        "use 'possible misapplication' language • no long-term records stored here.",
-        icon="🛡️"
+        "Facts only · no legal determinations · steward review required before any action.",
+        icon="🛡️",
     )
 
 
 def ensure_required_email():
     email = st.session_state.intake.get("member_email", "").strip()
     if not email or "@" not in email:
-        st.warning("Enter a valid member email in the sidebar to continue.")
+        st.warning("Enter your email in the sidebar to continue.")
         st.stop()
+
+
+def do_file_report(
+    intake: Dict[str, Any],
+    kb: Dict[str, Any],
+    deadline_rules: Dict[str, Any],
+    email_config: Dict[str, Any],
+) -> Optional[str]:
+    """Build packet, attempt email if configured, mark report filed. Returns error str or None."""
+    packet_text = build_packet_text(intake=intake, kb=kb, deadline_rules=deadline_rules)
+    st.session_state.packet_text = packet_text
+    st.session_state.packet_ready = True
+    st.session_state.report_filed = True
+
+    if email_config.get("enabled"):
+        intent = intake.get("routing", {}).get("intent", "general")
+        urgent = intent in URGENT_INTENTS
+        ref = intake.get("session_ref", "")
+        member = intake.get("member_email", "unknown")
+        flag = "URGENT" if urgent else "REPORT"
+        subject = f"[{flag}] AI Intake — {intent.upper()} — {member} — Ref {ref}"
+
+        cfg = EmailConfig(
+            provider=email_config["provider"],
+            sendgrid_api_key=email_config["sendgrid_api_key"],
+            from_email=email_config["from_email"],
+            to_email=email_config["to_email"],
+        )
+        ok, err = send_packet_email(cfg=cfg, subject=subject, body_text=packet_text)
+        if not ok:
+            return err
+
+    return None
 
 
 def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide")
     init_state()
 
-    # Load config from secrets (Streamlit) with safe defaults
     config = {
         "auth": {
             "enabled": True,
@@ -132,10 +182,10 @@ def main():
         "llm": {
             "api_key": st.secrets.get("OPENAI_API_KEY", ""),
             "allowed_models": json.loads(st.secrets.get("ALLOWED_MODELS_JSON", '["gpt-4.1-mini","gpt-4.1"]')),
-            "default_model": st.secrets.get("DEFAULT_MODEL", "gpt-4.1-mini"),
+            "default_model": st.secrets.get("DEFAULT_MODEL", "gpt-4.1"),
             "temperature": float(st.secrets.get("TEMPERATURE", 0.2)),
-            "max_output_tokens": int(st.secrets.get("MAX_OUTPUT_TOKENS", 800)),
-            "hard_token_budget": int(st.secrets.get("HARD_TOKEN_BUDGET", 12000)),  # per session
+            "max_output_tokens": int(st.secrets.get("MAX_OUTPUT_TOKENS", 1400)),
+            "hard_token_budget": int(st.secrets.get("HARD_TOKEN_BUDGET", 40000)),
         },
         "email": {
             "enabled": bool(st.secrets.get("EMAIL_ENABLED", False)),
@@ -144,103 +194,134 @@ def main():
             "from_email": st.secrets.get("FROM_EMAIL", ""),
             "to_email": st.secrets.get("TO_EMAIL", ""),
         },
-        "deadlines": {
-            "rules_path": "deadlines.json"
-        },
-        "kb": {
-            "path": "kb.json"
-        }
+        "deadlines": {"rules_path": "deadlines.json"},
+        "kb": {"path": "kb.json"},
     }
 
-    # Gate
     require_access(config["auth"])
-
     ui_header()
     system_banner()
     ui_sidebar(config)
-
     ensure_required_email()
 
-    # Load KB + deadline rules
     kb = load_kb(config["kb"]["path"])
     deadline_rules = load_deadline_rules(config["deadlines"]["rules_path"])
 
-    # LLM
     llm_cfg = LLMConfig(
         api_key=config["llm"]["api_key"],
-        model=st.session_state["llm_config"]["model"],
-        temperature=float(st.session_state["llm_config"]["temperature"]),
+        model=st.session_state["llm_config"].get("model", config["llm"]["default_model"]),
+        temperature=float(st.session_state["llm_config"].get("temperature", config["llm"]["temperature"])),
         max_output_tokens=config["llm"]["max_output_tokens"],
         hard_token_budget=config["llm"]["hard_token_budget"],
     )
     llm = LLMClient(llm_cfg)
 
-    # Chat display
     render_chat()
 
-    user_msg = st.chat_input("Describe what happened (facts only).")
+    # Handle "File Report Now" button click (sidebar)
+    if st.session_state.pop("file_now_requested", False) and not st.session_state.report_filed:
+        err = do_file_report(
+            intake=st.session_state.intake,
+            kb=kb,
+            deadline_rules=deadline_rules,
+            email_config=config["email"],
+        )
+        ref = st.session_state.intake.get("session_ref", "")
+        add_message(
+            "assistant",
+            f"Your report has been filed. Your steward will review this and be in touch. "
+            f"Save any written notices or documents you've received.\n\n**Reference: {ref}**",
+        )
+        if err:
+            st.warning(f"Report saved, but email notification failed: {err}")
+        st.rerun()
+
+    # Filed confirmation banner
+    if st.session_state.report_filed:
+        ref = st.session_state.intake.get("session_ref", "")
+        intent = st.session_state.intake.get("routing", {}).get("intent", "")
+        if intent in URGENT_INTENTS:
+            st.error(f"Report filed — **URGENT** case flagged for immediate steward attention. Reference: **{ref}**")
+        else:
+            st.success(f"Report filed and steward notified. Reference: **{ref}**")
+
+    # Chat input
+    placeholder = (
+        "Add anything else for your steward (optional)."
+        if st.session_state.report_filed
+        else "Describe what happened."
+    )
+    user_msg = st.chat_input(placeholder)
+
     if user_msg:
         add_message("user", user_msg)
 
-        # Route intent KB-first
         kb_result: KBResult = route_intent(user_msg, kb)
         st.session_state.intake["routing"]["intent"] = kb_result.intent
         st.session_state.intake["routing"]["kb_hits"] = [h.__dict__ for h in kb_result.hits]
 
-        # Ask next best question OR summarize a fact
+        # Determine if this turn should wrap up and trigger auto-filing
+        questions_after = st.session_state.intake["questions_asked"] + 1
+        is_final = questions_after >= AUTO_FILE_THRESHOLD and not st.session_state.report_filed
+
         assistant_text = llm.intake_turn(
             user_msg=user_msg,
             intake_state=st.session_state.intake,
             kb_result=kb_result,
             deadline_rules=deadline_rules,
+            final=is_final,
         )
 
         add_message("assistant", assistant_text)
-
-        # Update intake (lightweight, based on structured hints embedded by the model)
         st.session_state.intake["facts"].append(user_msg)
         st.session_state.intake["questions_asked"] += 1
 
+        # Auto-file after the final intake turn
+        if is_final:
+            err = do_file_report(
+                intake=st.session_state.intake,
+                kb=kb,
+                deadline_rules=deadline_rules,
+                email_config=config["email"],
+            )
+            if err:
+                st.warning(f"Report saved, but email notification failed: {err}")
+
         st.rerun()
 
-    # Packet assembly on demand
-    if st.session_state.packet_ready:
-        packet_text = build_packet_text(
-            intake=st.session_state.intake,
-            kb=kb,
-            deadline_rules=deadline_rules,
-        )
-        st.session_state.packet_text = packet_text
-
+    # Packet display (shown after filing or manual build)
+    if st.session_state.packet_ready and st.session_state.packet_text:
+        st.divider()
         st.subheader("Steward Review Packet")
-        st.text_area("Packet (copyable)", packet_text, height=420)
 
-        filename = build_packet_filename(st.session_state.intake)
-        st.download_button(
-            "Download Packet (.txt)",
-            data=as_download_bytes(packet_text),
-            file_name=filename,
-            mime="text/plain",
-        )
-
-        # Optional email-out
-        if config["email"]["enabled"]:
-            email_cfg = EmailConfig(
-                provider=config["email"]["provider"],
-                sendgrid_api_key=config["email"]["sendgrid_api_key"],
-                from_email=config["email"]["from_email"],
-                to_email=config["email"]["to_email"],
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.text_area("Packet (copyable)", st.session_state.packet_text, height=360)
+        with col2:
+            filename = build_packet_filename(st.session_state.intake)
+            st.download_button(
+                "Download (.txt)",
+                data=as_download_bytes(st.session_state.packet_text),
+                file_name=filename,
+                mime="text/plain",
+                use_container_width=True,
             )
-            if st.button("Email packet to steward"):
-                ok, err = send_packet_email(
-                    cfg=email_cfg,
-                    subject=f"AI Intake Packet — {st.session_state.intake.get('case_title') or 'New Case'}",
-                    body_text=packet_text,
-                )
-                if ok:
-                    st.success("Sent.")
-                else:
-                    st.error(f"Email failed: {err}")
+            if not config["email"]["enabled"]:
+                st.info("Email not configured.\nDownload and forward to your steward.")
+            elif not st.session_state.report_filed:
+                # Manual email send (fallback if auto-send failed)
+                if st.button("Email to Steward", use_container_width=True):
+                    err = do_file_report(
+                        intake=st.session_state.intake,
+                        kb=kb,
+                        deadline_rules=deadline_rules,
+                        email_config=config["email"],
+                    )
+                    if err:
+                        st.error(f"Email failed: {err}")
+                    else:
+                        st.success("Sent.")
+                    st.rerun()
 
 
 if __name__ == "__main__":

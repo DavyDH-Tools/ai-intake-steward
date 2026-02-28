@@ -1,8 +1,41 @@
 {
-  "version": "1.0",
-  "notes": "Edit these to match your contract timelines. Calendar-day logic for now.",
+  "version": "2.0",
+  "notes": "Art. 10 Sec. 5: Saturdays, Sundays and holidays are EXCLUDED from all time limits. These are workday counts. The deadline calculator currently uses calendar days — steward should adjust for weekends/holidays manually until workday logic is added.",
   "rules": [
-    { "name": "Step 1 filing deadline (example)", "days": 10 },
-    { "name": "Appeal deadline (example)", "days": 10 }
+    {
+      "name": "Step 1 — File grievance with immediate supervisor (Art. 10 Sec. 2a)",
+      "days": 10,
+      "note": "10 workdays from notification of reprimand, suspension, demotion, or termination. Termination cases may skip to Step D."
+    },
+    {
+      "name": "Step 1 — Supervisor must respond (Art. 10 Sec. 2a)",
+      "days": 10,
+      "note": "10 workdays from receipt of grievance."
+    },
+    {
+      "name": "Step 2 — Forward to Transit Director (Art. 10 Sec. 2b)",
+      "days": 10,
+      "note": "10 workdays from receipt of Step 1 supervisor decision."
+    },
+    {
+      "name": "Step 2 — Director must respond (Art. 10 Sec. 2b)",
+      "days": 10,
+      "note": "10 workdays from receipt of Step 2 grievance."
+    },
+    {
+      "name": "Step 3 — Forward to Employee Relations Officer (Art. 10 Sec. 2c)",
+      "days": 10,
+      "note": "10 workdays from completion of Step 2."
+    },
+    {
+      "name": "Step 4 — ERO decision (Art. 10 Sec. 2d)",
+      "days": 15,
+      "note": "15 workdays from receipt of employee's letter. ERO may request a 5-day extension verbally."
+    },
+    {
+      "name": "Arbitration demand (Art. 10 Sec. 4)",
+      "days": 10,
+      "note": "10 days from receipt of the latest decision. If no demand is made, grievance is forever barred."
+    }
   ]
 }
