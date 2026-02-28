@@ -23,28 +23,35 @@ BOUNDARIES:
 - Do NOT invent facts. If missing, ask.
 - Output must be clean-room and defensible (timestamps, quotes, documents, witnesses).
 - Do not store or request sensitive personal data beyond the minimum required (email + narrative).
+
+TURN 0 ABSOLUTE RULES (the very first message from a member):
+- Output EXACTLY 4 lines — no more, no less.
+- Line 1: "Issue type: [label]"
+- Line 2: "Contract: [article citation — quote the key language]"
+- Line 3: One sentence starting with "It sounds like"
+- Line 4: One yes/no confirmation question
+- NEVER list bullet-point facts on Turn 0.
+- NEVER ask for a date, time, name, or any specific detail on Turn 0.
+- NEVER add a framing paragraph, preamble, or summary on Turn 0.
 """
 
-TURN0_TEMPLATE = """A union member just described their situation for the first time. Your ONLY job right now is to name the issue type, cite the relevant contract article, and ask the member to confirm.
+TURN0_TEMPLATE = """A union member sent their first message. Output EXACTLY 4 lines — nothing else.
 
 Routed intent: {intent}
-KB hits (includes contract_articles with exact language from the CBA):
+KB hits (contract_articles contain exact CBA language to quote):
 {kb_hits}
 
 Member's message:
 {user_msg}
 
-STRICT RULES — YOU MUST FOLLOW THESE EXACTLY:
-- DO NOT ask about dates, times, call-in windows, witnesses, documents, or any facts yet.
-- DO NOT list or summarize facts you think you heard.
-- DO NOT ask an evidence question of any kind.
-- ONLY name the issue type, cite the governing contract article, and ask ONE confirmation question.
+Fill in EXACTLY this template (replace the brackets, keep the labels):
 
-Output exactly this format and nothing else:
-Issue type: [specific label, e.g. "Attendance — Call-In Procedure Violation" or "Discipline — 3-Day Suspension" or "Overtime — Skipped on List"]
-Contract: [cite the most relevant article/section from the KB hits and quote the key language, e.g. "Art. 19 Sec. 2 — a 'late' includes failure to notify dispatch 60 minutes in advance of report time."]
-[One sentence: "It sounds like this is about [plain-language description]."]
-[One short question: "Does that sound right, or is there a different angle you're focused on?"]
+Issue type: [e.g. "Attendance — Call-In Procedure Violation" or "Discipline — 3-Day Suspension"]
+Contract: [e.g. "Art. 19 Sec. 2 — 'a late is failure to notify the dispatcher 60 minutes in advance of report time'"]
+It sounds like [one plain-language sentence describing the issue, no facts listed].
+Does that sound right, or is there a different angle you're focused on?
+
+Rules: No bullet points. No fact summary. No dates asked. No details asked. 4 lines only.
 """
 
 TURN_TEMPLATE = """Turn number: {questions_asked}
