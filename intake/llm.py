@@ -14,6 +14,9 @@ class LLMConfig:
     hard_token_budget: int
 
 
+# After this many member responses, shift to wrap-up and auto-file
+AUTO_FILE_THRESHOLD = 3
+
 SYSTEM_RULES = """You are the AI Intake Steward.
 ROLE: Intake-only assistant for union steward casework.
 BOUNDARIES:
@@ -23,29 +26,81 @@ BOUNDARIES:
 - Do NOT invent facts. If missing, ask.
 - Output must be clean-room and defensible (timestamps, quotes, documents, witnesses).
 - Do not store or request sensitive personal data beyond the minimum required (email + narrative).
-OUTPUT STYLE:
-- Short, direct.
-- One question at the end.
+
+TURN 0 ABSOLUTE RULES (the very first message from a member):
+- Output EXACTLY 4 lines — no more, no less.
+- Line 1: "Issue type: [label]"
+- Line 2: "Contract: [article citation — quote the key language]"
+- Line 3: One sentence starting with "It sounds like"
+- Line 4: One yes/no confirmation question
+- NEVER list bullet-point facts on Turn 0.
+- NEVER ask for a date, time, name, or any specific detail on Turn 0.
+- NEVER add a framing paragraph, preamble, or summary on Turn 0.
 """
 
-TURN_TEMPLATE = """Context:
+TURN0_TEMPLATE = """A union member sent their first message. Output EXACTLY 4 lines — nothing else.
+
+Routed intent: {intent}
+KB hits (contract_articles contain exact CBA language to quote):
+{kb_hits}
+
+Member's message:
+{user_msg}
+
+Fill in EXACTLY this template (replace the brackets, keep the labels):
+
+Issue type: [e.g. "Attendance — Call-In Procedure Violation" or "Discipline — 3-Day Suspension"]
+Contract: [e.g. "Art. 19 Sec. 2 — 'a late is failure to notify the dispatcher 60 minutes in advance of report time'"]
+It sounds like [one plain-language sentence describing the issue, no facts listed].
+Does that sound right, or is there a different angle you're focused on?
+
+Rules: No bullet points. No fact summary. No dates asked. No details asked. 4 lines only.
+"""
+
+TURN_TEMPLATE = """Turn number: {questions_asked}
+
+Context:
 - Intake state: {intake_state}
 - Routed intent: {intent}
-- KB hits: {kb_hits}
+- KB hits (includes contract_articles with exact CBA language): {kb_hits}
 - Deadline rules: {deadline_rules}
 
 User message:
 {user_msg}
 
 Task:
-1) Extract any new concrete facts from the user message (do not restate long).
-2) Ask ONE next question that increases evidentiary quality (date/time, who, exact words, documents, discipline type).
-3) If the user indicates time-sensitive discipline or a meeting, ask for the date of the event to compute deadlines.
+1) Extract any new concrete facts from the user message (date/time, who, exact words, documents).
+2) If the sub-issue is not yet clear, ask ONE question to narrow it further.
+3) Once the sub-issue is clear, ask ONE question that increases evidentiary quality.
+4) If the issue involves time-sensitive discipline or a meeting, ask for the event date to compute deadlines.
 
 Return format:
-- 3-6 bullet facts (if present)
-- 1 short paragraph: "possible misapplication" framing (no determinations)
-- ONE question (single line starting with "Question:")
+Issue type: [specific label — always include]
+Contract: [cite the most relevant article/section from KB hits and quote the key language]
+Facts:
+- [bullet fact extracted from this message]
+Framing: [1-2 sentences using "possible misapplication" or "possible noncompliance" — cite specific article, e.g. "possible noncompliance with Art. 19 Sec. 2"]
+Question: [single question on one line]
+"""
+
+TURN_FINAL_TEMPLATE = """This is the final wrap-up turn. You have enough facts to file an initial report. DO NOT ask any more questions.
+
+All facts gathered so far:
+{all_facts}
+
+Routed intent: {intent}
+KB hits (CBA language for citation): {kb_hits}
+Member's latest message: {user_msg}
+Session reference: {session_ref}
+
+Write a short confirmation message to the member. It must include:
+1. A 2-sentence factual summary of what was captured (neutral, past tense, no opinions).
+2. The governing contract article by number (e.g. "Art. 19 Sec. 2").
+3. One sentence: "Your report has been sent to your steward."
+4. One practical tip (save documents, do not discuss the matter with management, etc.).
+5. Last line exactly: "Reference: {session_ref}"
+
+Keep it under 120 words. No bullet points. No questions. Warm but professional tone.
 """
 
 
@@ -58,20 +113,51 @@ class LLMClient:
         self.tokens_used_est = 0
 
     def _budget_check(self, add_estimate: int = 1200):
-        # Very rough guardrail; you can wire real token tracking later.
         if (self.tokens_used_est + add_estimate) > self.cfg.hard_token_budget:
             raise RuntimeError("Session token budget exceeded (hard limit).")
 
-    def intake_turn(self, user_msg: str, intake_state: Dict[str, Any], kb_result, deadline_rules: Dict[str, Any]) -> str:
+    def intake_turn(
+        self,
+        user_msg: str,
+        intake_state: Dict[str, Any],
+        kb_result,
+        deadline_rules: Dict[str, Any],
+        final: bool = False,
+    ) -> str:
         self._budget_check()
 
-        prompt = TURN_TEMPLATE.format(
-            intake_state=json.dumps(intake_state, ensure_ascii=False),
-            intent=kb_result.intent,
-            kb_hits=json.dumps([h.__dict__ for h in kb_result.hits], ensure_ascii=False),
-            deadline_rules=json.dumps(deadline_rules, ensure_ascii=False),
-            user_msg=user_msg
-        )
+        questions_asked = intake_state.get("questions_asked", 0)
+        session_ref = intake_state.get("session_ref", "N/A")
+
+        if questions_asked == 0:
+            prompt = TURN0_TEMPLATE.format(
+                intent=kb_result.intent,
+                kb_hits=json.dumps([h.__dict__ for h in kb_result.hits], ensure_ascii=False),
+                user_msg=user_msg,
+            )
+        elif final:
+            all_facts = "\n".join(
+                f"- {f}" for f in intake_state.get("facts", [])
+            )
+            # Include the current message (not yet appended to facts)
+            if user_msg not in intake_state.get("facts", []):
+                all_facts += f"\n- {user_msg}"
+            prompt = TURN_FINAL_TEMPLATE.format(
+                all_facts=all_facts,
+                intent=kb_result.intent,
+                kb_hits=json.dumps([h.__dict__ for h in kb_result.hits], ensure_ascii=False),
+                user_msg=user_msg,
+                session_ref=session_ref,
+            )
+        else:
+            prompt = TURN_TEMPLATE.format(
+                questions_asked=questions_asked,
+                intake_state=json.dumps(intake_state, ensure_ascii=False),
+                intent=kb_result.intent,
+                kb_hits=json.dumps([h.__dict__ for h in kb_result.hits], ensure_ascii=False),
+                deadline_rules=json.dumps(deadline_rules, ensure_ascii=False),
+                user_msg=user_msg,
+            )
 
         resp = self.client.responses.create(
             model=self.cfg.model,
@@ -83,7 +169,6 @@ class LLMClient:
             max_output_tokens=self.cfg.max_output_tokens,
         )
 
-        # Estimate tokens used (rough)
         self.tokens_used_est += 1200
 
         return resp.output_text.strip()

@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Any
 
 
@@ -10,6 +10,7 @@ class KBHit:
     intent: str
     tags: List[str]
     answer: str
+    contract_articles: List[Dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -60,6 +61,7 @@ def route_intent(user_msg: str, kb: Dict[str, Any]) -> KBResult:
             intent=it.get("intent", "general"),
             tags=it.get("tags", []),
             answer=it.get("answer", ""),
+            contract_articles=it.get("contract_articles", []),
         ))
 
     intent = hits[0].intent if hits else "general"
