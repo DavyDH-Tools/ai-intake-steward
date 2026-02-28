@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "items": [
     {
       "id": "late_call_in",
@@ -7,7 +7,25 @@
       "intent": "attendance",
       "tags": ["late", "call-in", "attendance", "tardy", "overslept", "no call", "no show", "absent"],
       "keywords": ["late call", "called in", "overslept", "tardy", "attendance", "no call no show", "absence", "called off sick"],
-      "answer": "Collect: scheduled start time, actual call time, who was called, whether sick code used, prior occurrences, written discipline, and what standard management claims."
+      "answer": "Collect: scheduled start time, actual call time, who was called, whether a verifiable emergency exists, prior lates in the rolling 12-month period, any written discipline issued, and what standard management claims.",
+      "contract_articles": [
+        {
+          "cite": "Art. 19 Sec. 2",
+          "text": "A 'late' is defined as a failure to report for work at the time specified on the run assignment or a failure to notify the dispatcher sixty (60) minutes in advance of report time."
+        },
+        {
+          "cite": "Art. 19 Sec. 3f",
+          "text": "Progressive discipline within any rolling 12-month period: 1–3 lates = Written Reprimand; 4th late = 1-day suspension without pay; 5th late = 3-day suspension without pay; 6th late = Termination. No-call/no-show: 1st = Written Reprimand; 2nd = 3-day suspension without pay; 3rd = Termination."
+        },
+        {
+          "cite": "Art. 19 Sec. 3e",
+          "text": "A late may be 'worked off' before the rolling 12-month period if the employee makes themselves available to the dispatcher for the rest of that day (without pay) and for all work for 4 consecutive following weeks. Only two lates may be worked off in any calendar year."
+        },
+        {
+          "cite": "Art. 30 Sec. 2",
+          "text": "Any employee who is sick and unable to work shall notify the dispatcher not later than sixty (60) minutes prior to their run. Any employee who fails to notify sixty minutes prior without a verifiable emergency will receive a written warning. A 2nd failure within one year will result in a late charge."
+        }
+      ]
     },
     {
       "id": "discipline_meeting",
@@ -15,7 +33,21 @@
       "intent": "discipline",
       "tags": ["investigation", "meeting", "discipline", "hearing", "write-up", "written warning", "counseling"],
       "keywords": ["notice of investigation", "hearing", "meeting with", "superintendent", "write up", "written warning", "counseling session", "called to the office"],
-      "answer": "Collect: date/time of meeting notice, exact allegations, whether rep requested/denied, any written notice, and who attended."
+      "answer": "Collect: date/time of meeting notice, exact allegations stated, whether steward was requested and present, any written notice provided, who attended, and whether the meeting was held after a determination to discipline was made.",
+      "contract_articles": [
+        {
+          "cite": "Art. 9 Sec. 1",
+          "text": "The City shall not discharge, or suspend, without just cause. Prior to any such action, the company shall give at least one written reprimand to the employee with a copy to the Union, except for Class I Rule violations as specified in the operator's handbook."
+        },
+        {
+          "cite": "Art. 9 Sec. 2",
+          "text": "Within 10 working days of knowledge of an incident that could lead to suspension or termination, the City will provide written acknowledgement to the employee and Union. The City will not proceed with an interview after a determination to discipline — or after discipline is reasonably contemplated — without the presence of a steward or alternate steward. The employee may waive steward representation in writing."
+        },
+        {
+          "cite": "Art. 9 Sec. 5",
+          "text": "Discipline involving no loss of pay remains in the employee's file for one year and will be removed at the employee's request if no other violations occurred. Discipline resulting in loss of pay, injury, or property damage becomes part of the permanent personnel record."
+        }
+      ]
     },
     {
       "id": "suspension",
@@ -23,7 +55,25 @@
       "intent": "suspension",
       "tags": ["suspended", "suspension", "terminated", "termination", "fired", "discharged", "discharge", "days off"],
       "keywords": ["day suspension", "suspended without pay", "terminated", "fired", "discharge letter", "last chance", "termination letter", "let go"],
-      "answer": "Collect: date of suspension/termination, exact reason given, any written notice, length of suspension, prior discipline in same series, whether Weingarten rights were offered, and whether progressive discipline was followed."
+      "answer": "Collect: date of suspension/termination, exact reason given, any written notice, length of suspension, prior discipline in same series, whether steward was present, whether written acknowledgement was given within 10 working days, and whether progressive discipline was followed.",
+      "contract_articles": [
+        {
+          "cite": "Art. 9 Sec. 1",
+          "text": "The City shall not discharge, or suspend, without just cause. Discharge must be in writing to the employee with a copy to the Union."
+        },
+        {
+          "cite": "Art. 9 Sec. 2",
+          "text": "Within 10 working days of knowledge of an incident, the City will provide written acknowledgement to the employee and Union. If acknowledgement is not timely, the employee/Union can request a 5-working-day delay of the disciplinary hearing to gather additional information."
+        },
+        {
+          "cite": "Art. 10 Sec. 2a",
+          "text": "The grievance must be taken in writing to the employee's immediate supervisor within ten (10) workdays after notification of the written reprimand, suspension, demotion or termination. In cases of termination, the grievant may proceed directly to Step D within ten (10) workdays."
+        },
+        {
+          "cite": "Art. 10 Sec. 5",
+          "text": "Saturdays, Sundays and holidays shall be excluded in calculating the time limits for grievance steps."
+        }
+      ]
     },
     {
       "id": "safety_event",
@@ -31,7 +81,21 @@
       "intent": "safety",
       "tags": ["accident", "incident", "arc", "preventable", "safety", "collision", "crash", "rear-end"],
       "keywords": ["accident", "rear-end", "ARC", "preventable", "collision", "incident report", "safety committee", "bus accident"],
-      "answer": "Collect: route, bus number, speed, conditions, video existence, what mitigation was taken, ARC process steps, and what documents were shown."
+      "answer": "Collect: route, bus number, speed, road/weather conditions, video existence, any mitigation taken, ARC process steps followed, documents shown to employee, and whether the City-required accident report was submitted on the date of the incident.",
+      "contract_articles": [
+        {
+          "cite": "Art. 35 Sec. 3",
+          "text": "All accidents or observance of accidents, however apparently insignificant, shall be fully and completely reported by employees on report forms furnished by the City. Such reports shall be submitted on the date of the accident or occurrence, if possible."
+        },
+        {
+          "cite": "Art. 35 Sec. 4",
+          "text": "Any employee involved in an accident involving damage to a City-owned vehicle or personal injury to a passenger must make an immediate report by telephone or radio to the City."
+        },
+        {
+          "cite": "Art. 35 Sec. 1",
+          "text": "The City agrees that it shall not require an operator to drive vehicles which are not mechanically sound and not in safe operating condition."
+        }
+      ]
     },
     {
       "id": "overtime_scheduling",
@@ -39,7 +103,25 @@
       "intent": "overtime",
       "tags": ["overtime", "ot", "forced", "extra board", "mandatory", "10-hour", "hours", "scheduling", "forced overtime"],
       "keywords": ["forced to work", "mandatory overtime", "extra board", "OT list", "overtime list", "skipped on list", "called for overtime", "10 hour rule", "hours of service", "forced in"],
-      "answer": "Collect: date/shift, who was forced, position on OT list, who was above/below on list, whether any exceptions apply, any written OT policy, and supervisor name."
+      "answer": "Collect: date/shift, whether member signed the OT sheet, member's position on OT list, who was above/below them on the list, who was actually assigned the work, whether day-off operators were considered first, and supervisor name.",
+      "contract_articles": [
+        {
+          "cite": "Art. 13 Sec. 1",
+          "text": "An overtime sign-on sheet will be posted each week from 12:00 p.m. Saturday until 2:00 p.m. Friday. After 2:00 p.m. Friday the sheet will be redlined and no further signatures allowed."
+        },
+        {
+          "cite": "Art. 13 Sec. 3",
+          "text": "Overtime work which becomes available shall be assigned to regular operators who have signed the overtime sheet in accordance with seniority, among those signing. However, day-off operators will be considered first."
+        },
+        {
+          "cite": "Art. 13 Sec. 4",
+          "text": "Operators not signing the overtime sheet will forfeit their right to all pay claims for extra work."
+        },
+        {
+          "cite": "Art. 17 Sec. 9",
+          "text": "All Extra Board operators will be scheduled for a minimum of forty (40) hours per week. If the City fails to assign 40 hours and the operator works all regular assignments, they will be paid for 40 hours."
+        }
+      ]
     },
     {
       "id": "seniority",
@@ -47,7 +129,25 @@
       "intent": "seniority",
       "tags": ["seniority", "bid", "shift bid", "assignment", "bumped", "junior", "senior", "run", "route bid", "pick"],
       "keywords": ["seniority violation", "bid sheet", "shift bid", "junior operator", "passed over", "bumped", "run assignment", "picked around", "pick list", "sign up"],
-      "answer": "Collect: member's seniority date, name/seniority of junior employee given preference, what run/shift was involved, bid process details, and any written policy or past practice cited."
+      "answer": "Collect: member's seniority date, name and seniority date of the junior employee given preference, what run/shift/vacancy was involved, bid process details, whether a bid sheet was posted, and any written policy or past practice cited by management.",
+      "contract_articles": [
+        {
+          "cite": "Art. 26 Sec. 1",
+          "text": "City seniority is computed from the date of hire. Divisional seniority (operations or maintenance) is computed from the latest date of hire in either division, provided the probationary period has been completed."
+        },
+        {
+          "cite": "Art. 16 Sec. 1",
+          "text": "Runs shall be selected on a seniority basis; the senior operator in service may select any run of his or her choice."
+        },
+        {
+          "cite": "Art. 16 Sec. 12",
+          "text": "Whenever a regularly assigned run will be vacant for 30 days or more, the City shall post a bid sheet for three (3) days. The run will be assigned to the senior person bidding on the vacant run."
+        },
+        {
+          "cite": "Art. 16 Sec. 2",
+          "text": "There shall be a minimum of three (3) run assignment bids annually, coordinated with school commencement dates (approximately mid to late May, mid to late August, and mid to late December)."
+        }
+      ]
     },
     {
       "id": "harassment",
@@ -55,7 +155,21 @@
       "intent": "harassment",
       "tags": ["harassment", "hostile", "intimidation", "bullying", "hostile work", "retaliation", "threatened", "targeted"],
       "keywords": ["hostile work environment", "being harassed", "supervisor harassment", "union retaliation", "intimidated", "threatened", "targeted by management", "toxic environment"],
-      "answer": "Collect: specific incidents with dates/times, exact words used, witnesses present, whether reported to HR/management, any pattern of behavior, and any connection to union activity or protected class."
+      "answer": "Collect: specific incidents with dates/times, exact words used, witnesses present, whether reported to HR/management, any pattern of behavior, and any connection to union activity or a protected class.",
+      "contract_articles": [
+        {
+          "cite": "Art. 4 Sec. 2",
+          "text": "The employer will recognize the employees as professionals. The employer will treat employees with dignity and respect at all times. Employees will also treat each other, as well as the employer, with dignity and respect."
+        },
+        {
+          "cite": "Art. 6 Sec. 1",
+          "text": "No employee shall be discriminated against because of race, color, national origin, age, sex, religion, ancestry, physical disability or because of union activity or non-activity by either the City or the Union."
+        },
+        {
+          "cite": "Art. 9 Sec. 12",
+          "text": "In the course of an investigation, any statements given by employees regarding other employees must be given freely and without threat of retaliation."
+        }
+      ]
     },
     {
       "id": "fmla_leave",
@@ -63,7 +177,25 @@
       "intent": "fmla",
       "tags": ["fmla", "medical leave", "leave", "loa", "doctor", "health", "intermittent", "ama"],
       "keywords": ["FMLA", "leave of absence", "medical leave", "doctor's note", "intermittent leave", "approved leave", "denied leave", "LOA", "AMA", "serious health condition"],
-      "answer": "Collect: whether FMLA was applied for/approved, denial reason, dates of leave requested vs denied, any discipline issued for approved leave absences, and any medical documentation provided."
+      "answer": "Collect: whether FMLA was applied for and/or approved, denial reason given, dates of leave requested vs. denied, any discipline issued for absences on approved leave, and any medical documentation provided.",
+      "contract_articles": [
+        {
+          "cite": "Art. 32 Sec. 5",
+          "text": "The Union and the City agree to abide by the Family Medical Leave Act."
+        },
+        {
+          "cite": "Art. 30 Sec. 7",
+          "text": "Any employee excused for three (3) or more consecutive days or for five (5) or more days in any thirty (30) day period must have a release from a doctor before they can return to work."
+        },
+        {
+          "cite": "Art. 30 Sec. 9",
+          "text": "Employees who have exhausted their sick leave will be required to use their accrued vacation before being placed on leave without pay."
+        },
+        {
+          "cite": "Art. 32 Sec. 2",
+          "text": "Any employee desiring a leave of absence shall request such leave in writing from the Department Director not less than thirty (30) days in advance. Leave of absence shall not exceed sixty (60) days and may be extended at the discretion of the City."
+        }
+      ]
     },
     {
       "id": "pay_dispute",
@@ -71,7 +203,25 @@
       "intent": "pay",
       "tags": ["pay", "paycheck", "wage", "underpaid", "missing pay", "short", "back pay", "rate", "step"],
       "keywords": ["short on my check", "missing pay", "underpaid", "wrong pay rate", "step increase", "back pay", "wage error", "paycheck error", "didn't get paid"],
-      "answer": "Collect: pay period affected, expected vs actual amount, correct pay rate per contract, whether error reported to payroll, and any prior communication with management about the error."
+      "answer": "Collect: pay period affected, expected vs. actual amount, correct pay rate per contract wage table, whether error was reported to payroll, and any prior communication with management about the error.",
+      "contract_articles": [
+        {
+          "cite": "Art. 12 Sec. 1",
+          "text": "Employees shall be paid per Appendix A wage tables. Current contract: 3% GPA + 2.5% merit step increase on anniversary date. Effective 12/05/2026: 3.0% GPA + 2.5% step. Effective 12/04/2027: 3% GPA + 2.5% step. O-step employees receive a $500 bonus on their anniversary date."
+        },
+        {
+          "cite": "Art. 12 Sec. 2",
+          "text": "When a merit increase has been approved and not processed so that the employee receives the increase at the scheduled pay period, and where the delay was due to no fault of the employee, the employee shall be paid retroactively to the scheduled date of the increase."
+        },
+        {
+          "cite": "Art. 12 Sec. 3",
+          "text": "All employees shall be paid an additional 50¢ per hour for all time worked between the hours of 8:00 p.m. and 5:00 a.m."
+        },
+        {
+          "cite": "Art. 12 Sec. 4",
+          "text": "Longevity pay begins after 6 years of total accumulative service: $4.00/month × total years of service. After 11 years: $5.00/month × total years of service."
+        }
+      ]
     },
     {
       "id": "drug_testing",
@@ -79,7 +229,21 @@
       "intent": "drug_test",
       "tags": ["drug test", "alcohol test", "random", "dot", "reasonable suspicion", "post-accident test"],
       "keywords": ["drug test", "alcohol test", "random test", "DOT test", "reasonable suspicion", "post-accident test", "failed test", "refused test", "testing policy"],
-      "answer": "Collect: type of test (random, post-accident, reasonable suspicion), date, whether proper protocol was followed, chain of custody documentation, MRO involvement, and any observed behavior cited."
+      "answer": "Collect: type of test (random, post-accident, reasonable suspicion), date administered, whether proper protocol was followed, chain of custody documentation, MRO involvement, and any observed behavior or incident cited as the basis.",
+      "contract_articles": [
+        {
+          "cite": "Art. 9 Sec. 1",
+          "text": "The City shall not discharge, or suspend, without just cause. No written reprimand or progressive discipline is required before suspension or termination if the cause is a Class I Rule violation as specified in the operator's handbook (drug/alcohol violations are typically Class I)."
+        },
+        {
+          "cite": "Art. 9 Sec. 2",
+          "text": "The City will not proceed with a disciplinary interview, after a determination to discipline is made, without the presence of a steward or alternate steward. The employee may waive steward representation in writing."
+        },
+        {
+          "cite": "Note",
+          "text": "The contract does not contain a dedicated drug/alcohol testing article. DOT/FTA federal testing requirements govern the testing process itself. Discipline arising from a failed or refused test is governed by Art. 9."
+        }
+      ]
     },
     {
       "id": "route_run_dispute",
@@ -87,7 +251,25 @@
       "intent": "run_dispute",
       "tags": ["run", "route", "reassigned", "pulled off run", "operator complaint", "transfer"],
       "keywords": ["pulled off my run", "reassigned route", "route complaint", "operator filed complaint", "transferred off", "run change", "route change"],
-      "answer": "Collect: which run/route, reason given by management, any written notice, whether other operators were available, contract article cited, and whether this is a pattern."
+      "answer": "Collect: which run/route, reason given by management for reassignment, any written notice provided, whether other operators were available, contract article cited by management, and whether this appears to be a pattern.",
+      "contract_articles": [
+        {
+          "cite": "Art. 15 Sec. 1",
+          "text": "A regularly assigned run is a day's work selected by a bus operator in accordance with their seniority and assigned to that person for an extended period."
+        },
+        {
+          "cite": "Art. 15 Sec. 5",
+          "text": "Regular run operators shall not be used on their day off for extra pieces of work until and unless all available extra board has been exhausted."
+        },
+        {
+          "cite": "Art. 16 Sec. 12",
+          "text": "Whenever a regularly assigned run will be vacant for 30 days or more, the City shall post a bid sheet for three (3) days. Any operator may sign for the open run and it will be assigned to the senior person bidding."
+        },
+        {
+          "cite": "Art. 3",
+          "text": "Management retains the right to establish and change work assignments and scheduling, and to transfer, promote, demote, or otherwise relieve employees from duties — subject to the express limits in this Agreement."
+        }
+      ]
     }
   ]
 }
