@@ -8,7 +8,7 @@ import streamlit as st
 
 from intake.auth import require_access
 from intake.kb import load_kb, route_intent, KBResult
-from intake.deadlines import load_deadline_rules
+from intake.deadlines import load_deadline_rules, compute_deadlines, parse_date
 from intake.llm import LLMClient, LLMConfig, AUTO_FILE_THRESHOLD
 from intake.packet import build_packet_text, build_packet_filename, as_download_bytes, URGENT_INTENTS
 from intake.emailer import send_packet_email, EmailConfig
@@ -51,7 +51,7 @@ def ui_header():
     st.divider()
 
 
-def ui_sidebar(config: Dict[str, Any]):
+def ui_sidebar(config: Dict[str, Any], deadline_rules: Dict[str, Any]):
     with st.sidebar:
         st.header("Your Report")
 
@@ -80,6 +80,36 @@ def ui_sidebar(config: Dict[str, Any]):
             ref = st.session_state.intake.get("session_ref", "")
             st.divider()
             st.success(f"Report filed.\nReference: **{ref}**")
+
+        # --- Deadline Calculator (always visible) ---
+        st.divider()
+        st.subheader("Deadline Calculator")
+        st.caption("Art. 10 — workdays only (Sat/Sun/holidays excluded)")
+
+        _stored_date = parse_date(st.session_state.intake.get("incident_date", ""))
+        incident_date = st.date_input(
+            "Incident / notification date",
+            value=_stored_date or dt.date.today(),
+            max_value=dt.date.today(),
+            key="incident_date_picker",
+        )
+        # Persist the chosen date so the packet can use it
+        st.session_state.intake["incident_date"] = incident_date.isoformat()
+
+        steps = compute_deadlines(incident_date, deadline_rules)
+        today = dt.date.today()
+        for name, due, _note in steps:
+            # Short label: strip the citation "(Art. X Sec. Y)" and anything after "—"
+            short = name.split("—")[-1].split("(")[0].strip() if "—" in name else name.split("(")[0].strip()
+            due_fmt = due.strftime("%b %-d, %Y")
+            delta = (due - today).days
+            if delta < 0:
+                status = f":red[OVERDUE by {abs(delta)}d]"
+            elif delta <= 5:
+                status = f":orange[{delta}d left — act soon]"
+            else:
+                status = f"{delta}d"
+            st.markdown(f"**{due_fmt}** · {short} · {status}")
 
         with st.expander("Advanced"):
             allowed_models = config["llm"]["allowed_models"]
@@ -199,13 +229,14 @@ def main():
     }
 
     require_access(config["auth"])
-    ui_header()
-    system_banner()
-    ui_sidebar(config)
-    ensure_required_email()
 
     kb = load_kb(config["kb"]["path"])
     deadline_rules = load_deadline_rules(config["deadlines"]["rules_path"])
+
+    ui_header()
+    system_banner()
+    ui_sidebar(config, deadline_rules)
+    ensure_required_email()
 
     llm_cfg = LLMConfig(
         api_key=config["llm"]["api_key"],
