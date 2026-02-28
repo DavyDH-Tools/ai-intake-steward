@@ -31,9 +31,9 @@
       "id": "discipline_meeting",
       "title": "Investigation / Disciplinary Meeting (representation + deadlines)",
       "intent": "discipline",
-      "tags": ["investigation", "meeting", "discipline", "hearing", "write-up", "written warning", "counseling"],
-      "keywords": ["notice of investigation", "hearing", "meeting with", "superintendent", "write up", "written warning", "counseling session", "called to the office"],
-      "answer": "Collect: date/time of meeting notice, exact allegations stated, whether steward was requested and present, any written notice provided, who attended, and whether the meeting was held after a determination to discipline was made.",
+      "tags": ["investigation", "meeting", "discipline", "hearing", "write-up", "written warning", "counseling", "pre-disciplinary", "pre-disc"],
+      "keywords": ["notice of investigation", "hearing", "meeting with", "superintendent", "write up", "written warning", "counseling session", "called to the office", "pre-disciplinary meeting", "pre-disc meeting", "waive", "waiving", "waiver", "waive my rights", "waive representation", "right to a steward", "steward present", "steward representation", "representation rights", "investigatory interview", "investigation interview"],
+      "answer": "Collect: date/time of meeting notice, exact allegations stated, whether steward was requested and present, any written notice provided, who attended, and whether the meeting was held after a determination to discipline was made. CRITICAL: If the member mentions waiving steward representation, advise them not to sign any waiver without first consulting a steward — the right is protected by Art. 9 Sec. 2 and K.S.A. 75-4324.",
       "contract_articles": [
         {
           "cite": "Art. 9 Sec. 1",
@@ -46,6 +46,10 @@
         {
           "cite": "Art. 9 Sec. 5",
           "text": "Discipline involving no loss of pay remains in the employee's file for one year and will be removed at the employee's request if no other violations occurred. Discipline resulting in loss of pay, injury, or property damage becomes part of the permanent personnel record."
+        },
+        {
+          "cite": "K.S.A. 75-4324 / 75-4333(b)(1) [KPEERA]",
+          "text": "Public employees have the statutory right to join and participate in employee organizations (K.S.A. 75-4324). It is a prohibited practice under KPEERA for the City to interfere with, restrain, or coerce employees in the exercise of that right (K.S.A. 75-4333(b)(1)). The right to steward representation at a disciplinary meeting is grounded in Art. 9 Sec. 2 of the MOA and protected by these Kansas statutes — not federal NLRA/Weingarten doctrine, which does not apply to City of Wichita employees."
         }
       ]
     },
