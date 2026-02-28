@@ -173,6 +173,13 @@ def do_file_report(
     email_config: Dict[str, Any],
 ) -> Optional[str]:
     """Build packet, attempt email if configured, mark report filed. Returns error str or None."""
+    # Re-route on the full conversation so the packet reflects all turns, not just the last one.
+    facts = intake.get("facts", [])
+    if facts:
+        full_result = route_intent(" ".join(facts), kb)
+        intake["routing"]["intent"] = full_result.intent
+        intake["routing"]["kb_hits"] = [h.__dict__ for h in full_result.hits]
+
     packet_text = build_packet_text(intake=intake, kb=kb, deadline_rules=deadline_rules)
     st.session_state.packet_text = packet_text
     st.session_state.packet_ready = True
