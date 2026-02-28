@@ -1,6 +1,8 @@
 import datetime as dt
 from typing import Dict, Any, List
 
+from intake.deadlines import compute_deadlines, parse_date
+
 
 # These intents trigger urgent flagging in the email subject and packet header
 URGENT_INTENTS = {"suspension", "harassment", "drug_test"}
@@ -83,9 +85,18 @@ def build_packet_text(intake: Dict[str, Any], kb: Dict[str, Any], deadline_rules
 
     lines.append("5) DEADLINE NOTES (Article 10 — workdays, excluding Sat/Sun/holidays)")
     lines.append("-" * 60)
-    lines.append("Provide the key event date (YYYY-MM-DD) to compute exact filing deadlines.")
-    for r in deadline_rules.get("rules", []):
-        lines.append(f"  {r.get('name')}: {r.get('days')} workdays")
+    incident_date = parse_date(intake.get("incident_date", ""))
+    if incident_date:
+        lines.append(f"Incident / notification date: {incident_date.isoformat()}")
+        steps = compute_deadlines(incident_date, deadline_rules)
+        for name, due, note in steps:
+            lines.append(f"  {name}")
+            lines.append(f"    Due: {due.strftime('%A, %B %-d, %Y')}  ({note})")
+            lines.append("")
+    else:
+        lines.append("Incident date not provided — enter date in the sidebar calculator to get exact deadlines.")
+        for r in deadline_rules.get("rules", []):
+            lines.append(f"  {r.get('name')}: {r.get('days')} workdays")
     lines.append("")
 
     lines.append("=" * 60)
