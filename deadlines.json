@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "notes": "Art. 10 Sec. 5: Saturdays, Sundays and holidays are EXCLUDED from all time limits. These are workday counts. The deadline calculator currently uses calendar days — steward should adjust for weekends/holidays manually until workday logic is added.",
+  "notes": "Art. 10 Sec. 5: Saturdays, Sundays and holidays are EXCLUDED from all time limits. These are workday counts. The deadline calculator skips weekends and the Kansas/federal holiday set defined in deadlines.py.",
   "rules": [
     {
       "name": "Step 1 — File grievance with immediate supervisor (Art. 10 Sec. 2a)",

@@ -71,15 +71,23 @@ def ui_sidebar(config: Dict[str, Any], deadline_rules: Dict[str, Any]):
         questions = st.session_state.intake.get("questions_asked", 0)
         if questions >= 1 and not st.session_state.report_filed:
             st.divider()
-            st.caption("Ready to submit? Your steward will be notified immediately.")
+            to_addr = config["email"].get("to_email", "") if config["email"].get("enabled") else ""
+            if to_addr:
+                st.caption(f"Ready to submit? Report will be sent to **{to_addr}**.")
+            else:
+                st.caption("Ready to submit? Download the packet and forward to your steward.")
             if st.button("File Report Now", type="primary", use_container_width=True):
                 st.session_state["file_now_requested"] = True
 
         # Confirmation display
         if st.session_state.report_filed:
             ref = st.session_state.intake.get("session_ref", "")
+            to_addr = config["email"].get("to_email", "") if config["email"].get("enabled") else ""
             st.divider()
-            st.success(f"Report filed.\nReference: **{ref}**")
+            if to_addr:
+                st.success(f"Report filed.\nSent to: {to_addr}\nReference: **{ref}**")
+            else:
+                st.success(f"Report filed.\nReference: **{ref}**")
 
         # --- Deadline Calculator (always visible) ---
         st.divider()
@@ -111,25 +119,26 @@ def ui_sidebar(config: Dict[str, Any], deadline_rules: Dict[str, Any]):
                 status = f"{delta}d"
             st.markdown(f"**{due_fmt}** · {short} · {status}")
 
-        with st.expander("Advanced"):
-            allowed_models = config["llm"]["allowed_models"]
-            default_model = config["llm"]["default_model"]
-            model = st.selectbox(
-                "Model",
-                options=allowed_models,
-                index=allowed_models.index(default_model),
-            )
-            temperature = st.slider(
-                "Temperature",
-                min_value=0.0, max_value=1.0,
-                value=float(config["llm"]["temperature"]),
-                step=0.05,
-            )
-            st.session_state["llm_config"] = {"model": model, "temperature": temperature}
+        if st.session_state.get("is_admin", False):
+            with st.expander("Advanced"):
+                allowed_models = config["llm"]["allowed_models"]
+                default_model = config["llm"]["default_model"]
+                model = st.selectbox(
+                    "Model",
+                    options=allowed_models,
+                    index=allowed_models.index(default_model),
+                )
+                temperature = st.slider(
+                    "Temperature",
+                    min_value=0.0, max_value=1.0,
+                    value=float(config["llm"]["temperature"]),
+                    step=0.05,
+                )
+                st.session_state["llm_config"] = {"model": model, "temperature": temperature}
 
-        with st.expander("Packet"):
-            if st.button("Build Packet (manual)"):
-                st.session_state.packet_ready = True
+            with st.expander("Packet"):
+                if st.button("Build Packet (manual)"):
+                    st.session_state.packet_ready = True
 
         st.divider()
         if st.button("Reset Session"):
@@ -214,6 +223,7 @@ def main():
         "auth": {
             "enabled": True,
             "admin_email": st.secrets.get("ADMIN_EMAIL", "").strip(),
+            "admin_code": st.secrets.get("ADMIN_PASSCODE", "").strip(),
             "passcodes": st.secrets.get("PASSCODES_JSON", "[]"),
         },
         "llm": {
@@ -278,10 +288,12 @@ def main():
     if st.session_state.report_filed:
         ref = st.session_state.intake.get("session_ref", "")
         intent = st.session_state.intake.get("routing", {}).get("intent", "")
+        to_addr = config["email"].get("to_email", "") if config["email"].get("enabled") else ""
+        sent_note = f" Sent to **{to_addr}**." if to_addr else ""
         if intent in URGENT_INTENTS:
-            st.error(f"Report filed — **URGENT** case flagged for immediate steward attention. Reference: **{ref}**")
+            st.error(f"Report filed — **URGENT** case flagged for immediate steward attention.{sent_note} Reference: **{ref}**")
         else:
-            st.success(f"Report filed and steward notified. Reference: **{ref}**")
+            st.success(f"Report filed and steward notified.{sent_note} Reference: **{ref}**")
 
     # Chat input
     placeholder = (
@@ -348,6 +360,9 @@ def main():
                 st.info("Email not configured.\nDownload and forward to your steward.")
             elif not st.session_state.report_filed:
                 # Manual email send (fallback if auto-send failed)
+                to_addr = config["email"].get("to_email", "")
+                if to_addr:
+                    st.caption(f"Sends to: {to_addr}")
                 if st.button("Email to Steward", use_container_width=True):
                     err = do_file_report(
                         intake=st.session_state.intake,
