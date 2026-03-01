@@ -111,25 +111,26 @@ def ui_sidebar(config: Dict[str, Any], deadline_rules: Dict[str, Any]):
                 status = f"{delta}d"
             st.markdown(f"**{due_fmt}** · {short} · {status}")
 
-        with st.expander("Advanced"):
-            allowed_models = config["llm"]["allowed_models"]
-            default_model = config["llm"]["default_model"]
-            model = st.selectbox(
-                "Model",
-                options=allowed_models,
-                index=allowed_models.index(default_model),
-            )
-            temperature = st.slider(
-                "Temperature",
-                min_value=0.0, max_value=1.0,
-                value=float(config["llm"]["temperature"]),
-                step=0.05,
-            )
-            st.session_state["llm_config"] = {"model": model, "temperature": temperature}
+        if st.session_state.get("is_admin", False):
+            with st.expander("Advanced"):
+                allowed_models = config["llm"]["allowed_models"]
+                default_model = config["llm"]["default_model"]
+                model = st.selectbox(
+                    "Model",
+                    options=allowed_models,
+                    index=allowed_models.index(default_model),
+                )
+                temperature = st.slider(
+                    "Temperature",
+                    min_value=0.0, max_value=1.0,
+                    value=float(config["llm"]["temperature"]),
+                    step=0.05,
+                )
+                st.session_state["llm_config"] = {"model": model, "temperature": temperature}
 
-        with st.expander("Packet"):
-            if st.button("Build Packet (manual)"):
-                st.session_state.packet_ready = True
+            with st.expander("Packet"):
+                if st.button("Build Packet (manual)"):
+                    st.session_state.packet_ready = True
 
         st.divider()
         if st.button("Reset Session"):
@@ -214,6 +215,7 @@ def main():
         "auth": {
             "enabled": True,
             "admin_email": st.secrets.get("ADMIN_EMAIL", "").strip(),
+            "admin_code": st.secrets.get("ADMIN_PASSCODE", "").strip(),
             "passcodes": st.secrets.get("PASSCODES_JSON", "[]"),
         },
         "llm": {
