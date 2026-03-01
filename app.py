@@ -251,7 +251,11 @@ def main():
         "kb": {"path": "kb.json"},
     }
 
-    require_access(config["auth"])
+    auth_email = require_access(config["auth"])
+
+    # Pre-fill member email from the passcode mapping (only if not already set).
+    if auth_email and not st.session_state.intake.get("member_email"):
+        st.session_state.intake["member_email"] = auth_email
 
     kb = load_kb(config["kb"]["path"])
     deadline_rules = load_deadline_rules(config["deadlines"]["rules_path"])
