@@ -316,7 +316,12 @@ def main():
     if user_msg:
         add_message("user", user_msg)
 
-        kb_result: KBResult = route_intent(user_msg, kb)
+        # Route against the full conversation so later messages don't lose context
+        # established in earlier turns (e.g. "flat tire" alone won't drop the
+        # attendance article that "late to work" correctly matched on Turn 0).
+        prior_facts = st.session_state.intake.get("facts", [])
+        route_text = " ".join(prior_facts + [user_msg])
+        kb_result: KBResult = route_intent(route_text, kb)
         st.session_state.intake["routing"]["intent"] = kb_result.intent
         st.session_state.intake["routing"]["kb_hits"] = [h.__dict__ for h in kb_result.hits]
 
