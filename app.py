@@ -59,12 +59,14 @@ def ui_sidebar(config: Dict[str, Any], deadline_rules: Dict[str, Any]):
             "Your email (required)",
             value=st.session_state.intake.get("member_email", ""),
             placeholder="name@example.com",
+            key="member_email_input",
         ).strip()
 
         st.session_state.intake["case_title"] = st.text_input(
             "Brief title (optional)",
             value=st.session_state.intake.get("case_title", ""),
             placeholder="e.g. 'Late call-in warning'",
+            key="case_title_input",
         ).strip()
 
         # File Now button — available after the member has confirmed the issue type (turn 1+)
@@ -169,6 +171,9 @@ def system_banner():
 
 
 def ensure_required_email():
+    # Skip the gate once the report is filed — email was already captured at that point.
+    if st.session_state.get("report_filed"):
+        return
     email = st.session_state.intake.get("member_email", "").strip()
     if not email or "@" not in email:
         st.warning("Enter your email in the sidebar to continue.")
@@ -268,21 +273,26 @@ def main():
 
     # Handle "File Report Now" button click (sidebar)
     if st.session_state.pop("file_now_requested", False) and not st.session_state.report_filed:
-        err = do_file_report(
-            intake=st.session_state.intake,
-            kb=kb,
-            deadline_rules=deadline_rules,
-            email_config=config["email"],
-        )
-        ref = st.session_state.intake.get("session_ref", "")
-        add_message(
-            "assistant",
-            f"Your report has been filed. Your steward will review this and be in touch. "
-            f"Save any written notices or documents you've received.\n\n**Reference: {ref}**",
-        )
-        if err:
-            st.warning(f"Report saved, but email notification failed: {err}")
-        st.rerun()
+        try:
+            err = do_file_report(
+                intake=st.session_state.intake,
+                kb=kb,
+                deadline_rules=deadline_rules,
+                email_config=config["email"],
+            )
+        except Exception as exc:
+            st.error(f"Filing failed unexpectedly: {exc}. Your information was not lost — try again.")
+            err = None
+        else:
+            ref = st.session_state.intake.get("session_ref", "")
+            add_message(
+                "assistant",
+                f"Your report has been filed. Your steward will review this and be in touch. "
+                f"Save any written notices or documents you've received.\n\n**Reference: {ref}**",
+            )
+            if err:
+                st.warning(f"Report saved, but email notification failed: {err}")
+            st.rerun()
 
     # Filed confirmation banner
     if st.session_state.report_filed:
@@ -328,14 +338,18 @@ def main():
 
         # Auto-file after the final intake turn
         if is_final:
-            err = do_file_report(
-                intake=st.session_state.intake,
-                kb=kb,
-                deadline_rules=deadline_rules,
-                email_config=config["email"],
-            )
-            if err:
-                st.warning(f"Report saved, but email notification failed: {err}")
+            try:
+                err = do_file_report(
+                    intake=st.session_state.intake,
+                    kb=kb,
+                    deadline_rules=deadline_rules,
+                    email_config=config["email"],
+                )
+            except Exception as exc:
+                st.error(f"Auto-filing failed unexpectedly: {exc}. Use 'File Report Now' to retry.")
+            else:
+                if err:
+                    st.warning(f"Report saved, but email notification failed: {err}")
 
         st.rerun()
 
