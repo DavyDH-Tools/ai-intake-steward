@@ -55,6 +55,7 @@ It sounds like [one plain-language sentence describing the issue, no facts liste
 Does that sound right, or is there a different angle you're focused on?
 
 Rules: No bullet points. No fact summary. No dates asked. No details asked. 4 lines only.
+Contract rule: If the KB hits contain no relevant article, output exactly: Contract: Steward to identify applicable provision
 """
 
 TURN_TEMPLATE = """Turn number: {questions_asked}
@@ -76,7 +77,7 @@ Task:
 
 Return format:
 Issue type: [specific label — always include]
-Contract: [cite the most relevant article/section from KB hits and quote the key language]
+Contract: [cite the most relevant article/section from KB hits and quote the key language; if no KB article matches, output exactly: Contract: Steward to identify applicable provision]
 Facts:
 - [bullet fact extracted from this message]
 Framing: [1-2 sentences using "possible misapplication" or "possible noncompliance" — cite specific article, e.g. "possible noncompliance with Art. 19 Sec. 2"]
@@ -95,7 +96,7 @@ Session reference: {session_ref}
 
 Write a short confirmation message to the member. It must include:
 1. A 2-sentence factual summary of what was captured (neutral, past tense, no opinions).
-2. The governing contract article by number (e.g. "Art. 19 Sec. 2").
+2. The governing contract article by number if one was identified (e.g. "Art. 19 Sec. 2"); if none matched, omit the citation entirely — do not invent one.
 3. One sentence: "Your report has been sent to your steward."
 4. One practical tip (save documents, do not discuss the matter with management, etc.).
 5. Last line exactly: "Reference: {session_ref}"

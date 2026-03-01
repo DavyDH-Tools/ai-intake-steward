@@ -69,9 +69,10 @@ def ui_sidebar(config: Dict[str, Any], deadline_rules: Dict[str, Any]):
             key="case_title_input",
         ).strip()
 
-        # File Now button — available after the member has confirmed the issue type (turn 1+)
+        # File Now button — available after the member has given at least 2 responses
+        # (Turn 0 confirms the issue type; Turn 1 adds at least one detail or clarification)
         questions = st.session_state.intake.get("questions_asked", 0)
-        if questions >= 1 and not st.session_state.report_filed:
+        if questions >= 2 and not st.session_state.report_filed:
             st.divider()
             to_addr = config["email"].get("to_email", "") if config["email"].get("enabled") else ""
             if to_addr:
@@ -316,7 +317,12 @@ def main():
     if user_msg:
         add_message("user", user_msg)
 
-        kb_result: KBResult = route_intent(user_msg, kb)
+        # Route against the full conversation so later messages don't lose context
+        # established in earlier turns (e.g. "flat tire" alone won't drop the
+        # attendance article that "late to work" correctly matched on Turn 0).
+        prior_facts = st.session_state.intake.get("facts", [])
+        route_text = " ".join(prior_facts + [user_msg])
+        kb_result: KBResult = route_intent(route_text, kb)
         st.session_state.intake["routing"]["intent"] = kb_result.intent
         st.session_state.intake["routing"]["kb_hits"] = [h.__dict__ for h in kb_result.hits]
 
