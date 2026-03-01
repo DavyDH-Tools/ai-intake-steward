@@ -38,4 +38,6 @@ def send_packet_email(cfg: EmailConfig, subject: str, body_text: str) -> Tuple[b
         sg.send(message)
         return True, None
     except Exception as e:
-        return False, str(e)
+        status = getattr(e, "status_code", None) or getattr(e, "code", None)
+        detail = f" (status {status})" if status else ""
+        return False, f"Email send failed{detail} — check SendGrid configuration"
