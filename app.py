@@ -71,15 +71,23 @@ def ui_sidebar(config: Dict[str, Any], deadline_rules: Dict[str, Any]):
         questions = st.session_state.intake.get("questions_asked", 0)
         if questions >= 1 and not st.session_state.report_filed:
             st.divider()
-            st.caption("Ready to submit? Your steward will be notified immediately.")
+            to_addr = config["email"].get("to_email", "") if config["email"].get("enabled") else ""
+            if to_addr:
+                st.caption(f"Ready to submit? Report will be sent to **{to_addr}**.")
+            else:
+                st.caption("Ready to submit? Download the packet and forward to your steward.")
             if st.button("File Report Now", type="primary", use_container_width=True):
                 st.session_state["file_now_requested"] = True
 
         # Confirmation display
         if st.session_state.report_filed:
             ref = st.session_state.intake.get("session_ref", "")
+            to_addr = config["email"].get("to_email", "") if config["email"].get("enabled") else ""
             st.divider()
-            st.success(f"Report filed.\nReference: **{ref}**")
+            if to_addr:
+                st.success(f"Report filed.\nSent to: {to_addr}\nReference: **{ref}**")
+            else:
+                st.success(f"Report filed.\nReference: **{ref}**")
 
         # --- Deadline Calculator (always visible) ---
         st.divider()
@@ -280,10 +288,12 @@ def main():
     if st.session_state.report_filed:
         ref = st.session_state.intake.get("session_ref", "")
         intent = st.session_state.intake.get("routing", {}).get("intent", "")
+        to_addr = config["email"].get("to_email", "") if config["email"].get("enabled") else ""
+        sent_note = f" Sent to **{to_addr}**." if to_addr else ""
         if intent in URGENT_INTENTS:
-            st.error(f"Report filed — **URGENT** case flagged for immediate steward attention. Reference: **{ref}**")
+            st.error(f"Report filed — **URGENT** case flagged for immediate steward attention.{sent_note} Reference: **{ref}**")
         else:
-            st.success(f"Report filed and steward notified. Reference: **{ref}**")
+            st.success(f"Report filed and steward notified.{sent_note} Reference: **{ref}**")
 
     # Chat input
     placeholder = (
@@ -350,6 +360,9 @@ def main():
                 st.info("Email not configured.\nDownload and forward to your steward.")
             elif not st.session_state.report_filed:
                 # Manual email send (fallback if auto-send failed)
+                to_addr = config["email"].get("to_email", "")
+                if to_addr:
+                    st.caption(f"Sends to: {to_addr}")
                 if st.button("Email to Steward", use_container_width=True):
                     err = do_file_report(
                         intake=st.session_state.intake,
