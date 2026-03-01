@@ -5,7 +5,7 @@ from intake.deadlines import compute_deadlines, parse_date
 
 
 # These intents trigger urgent flagging in the email subject and packet header
-URGENT_INTENTS = {"suspension", "harassment", "drug_test"}
+URGENT_INTENTS = {"discipline", "suspension", "harassment", "drug_test"}
 
 
 # ---------------------------------------------------------------------------
