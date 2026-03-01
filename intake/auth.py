@@ -17,7 +17,7 @@ def require_access(auth_cfg: dict):
     admin_code = auth_cfg.get("admin_code", "")
 
     st.sidebar.header("Access")
-    code = st.sidebar.text_input("Passcode", type="password", placeholder="Enter passcode")
+    code = st.sidebar.text_input("Passcode", type="password", placeholder="Enter passcode", key="auth_passcode")
 
     if not code or code not in passcodes:
         st.sidebar.error("Access denied.")
